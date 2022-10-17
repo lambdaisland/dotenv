@@ -56,10 +56,13 @@
     earlier in the contents, passed in as the `:vars` options, or on Clojure (not
     ClojureScript) will be filled from the process environment (using
     `System/getenv`).
-  - Certain backslash sequences are understood. \\n newline, \\t tab, \\n
-    newline, \\r carriage return, \\f form feed, \\b backspace, \uFFFF unicode
-    character. A backslash followed by any other character will be replaced by
-    said characters, including single and double quotes.
+  - Certain backslash sequences are understood in unquoted or double-quoted
+    values. \\n newline, \\t tab, \\r carriage return, \\f form feed, \\b
+    backspace, \uFFFF unicode character. A backslash followed by any other
+    character will be replaced by said characters, including single and double
+    quotes.
+  - In single-quoted values only \\' is understood, other escape sequences are
+    treated literally
   "
   ([contents]
    (parse-dotenv contents nil))
@@ -82,8 +85,9 @@
                                                     (cons v lines))]
                (when-not split
                  (throw (ex-info "Unterminated quoted value" {:key k})))
-               (if-let [[_ ll] (re-find #"(.*)'\s*(#.*)?$" (last ql))]
-                 (recur (conj vars {k (str/join "\n" (concat (butlast ql) [ll]))})
+               (if-let [[_ ll] (re-find #"(([^']|\\')*)'\s*(#.*)?$" (last ql))]
+                 (recur (conj vars {k (str/replace (str/join "\n" (concat (butlast ql) [ll]))
+                                                   #"\\'" "'")})
                         rl)
                  (throw (ex-info "Invalid single quoted value" {:key k}))))
 
@@ -93,14 +97,14 @@
                                                     (cons v lines))]
                (when-not split
                  (throw (ex-info "Unterminated quoted value" {:key k})))
-               (if-let [[_ ll] (re-find #"(.*)\"\s*(#.*)?$" (last ql))]
+               (if-let [[_ ll] (re-find #"(([^\"]|\\\")*)\"\s*(#.*)?$" (last ql))]
                  (recur (assoc vars k (cond-> (unquote-chars (str/join "\n" (concat (butlast ql) [ll])))
                                         expand?
                                         (expand-vars vars)))
                         rl)
                  (throw (ex-info "Invalid double quoted value" {:key k}))))
 
-             (recur (assoc vars k (cond-> (unquote-chars (str/replace v #"\s*#.*" ""))
+             (recur (assoc vars k (cond-> (unquote-chars (str/trim (str/replace v #"#.*$" "")))
                                     expand?
                                     (expand-vars vars))) lines))
            (throw (ex-info "Invalid syntax" {:line line}))))))))
