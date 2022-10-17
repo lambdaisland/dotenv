@@ -1,4 +1,4 @@
-# Unreleased
+# 0.2.5 (2022-10-17 / 13be4ef)
 
 ## Fixed
 

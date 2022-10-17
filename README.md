@@ -32,13 +32,13 @@ Parse the contents of a dotenv file, returns a map.
 To use the latest release, add the following to your `deps.edn` ([Clojure CLI](https://clojure.org/guides/deps_and_cli))
 
 ```
-com.lambdaisland/dotenv {:mvn/version "0.1.1"}
+com.lambdaisland/dotenv {:mvn/version "0.2.5"}
 ```
 
 or add the following to your `project.clj` ([Leiningen](https://leiningen.org/))
 
 ```
-[com.lambdaisland/dotenv "0.1.1"]
+[com.lambdaisland/dotenv "0.2.5"]
 ```
 <!-- /installation -->
 
